@@ -10,7 +10,7 @@ use crossbeam_channel::unbounded;
 use crossbeam_channel::{Receiver, Sender};
 use std::cmp::min;
 use std::sync::mpsc::channel;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 #[cfg(feature = "opencl")]
 use std::thread;
 
@@ -226,6 +226,7 @@ pub fn create_scheduler_thread(
                     }
                     None => (),
                 }
+
                 // shutdown gpu threads
                 #[cfg(feature = "opencl")]
                 for gpu in &gpu_channels {

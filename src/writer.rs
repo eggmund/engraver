@@ -5,7 +5,7 @@ use crossbeam_channel::{Receiver, Sender};
 use std::cmp::min;
 use std::io::{Read, Seek, SeekFrom, Write, Error, ErrorKind};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 const TASK_SIZE: u64 = 16384;
 
@@ -66,7 +66,8 @@ pub fn create_writer_thread(
                     if (scoop + 1) % 128 == 0 {
                         match &mut pb {
                             Some(pb) => {
-                                pb.add(nonces_to_write * SCOOP_SIZE * 128);
+                                let nonces_done = nonces_to_write * SCOOP_SIZE * 128;
+                                pb.add(nonces_done);
                             }
                             None => (),
                         }
@@ -78,11 +79,10 @@ pub fn create_writer_thread(
             // thread end
             if task.nonces == nonces_written {
                 match &mut pb {
-                    Some(pb) => {
-                        pb.finish_print("Writer done.");
-                    }
+                    Some(pb) => pb.finish_print("Writer done."),
                     None => (),
                 }
+
                 tx_empty_buffers.send(buffer).unwrap();
                 break;
             }
